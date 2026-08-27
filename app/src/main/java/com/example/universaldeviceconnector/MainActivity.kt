@@ -308,7 +308,7 @@ class MainActivity : AppCompatActivity() {
         fun startBluetoothScan(){if(!::bluetoothAdapter.isInitialized||!bluetoothAdapter.isEnabled){Toast.makeText(this@MainActivity,"Bluetooth disabled",Toast.LENGTH_LONG).show();return}
             Toast.makeText(this@MainActivity,"Scanning BT…",Toast.LENGTH_SHORT).show();logEvent("BT scan started");updateStatusBar("Scanning BT…",0)
             btDevices.clear();btDisplayList.clear();btAdapter.notifyDataSetChanged();if(bluetoothAdapter.isDiscovering)bluetoothAdapter.cancelDiscovery();bluetoothAdapter.startDiscovery()
-            try{registerReceiver(btReceiver,IntentFilter(BluetoothDevice.ACTION_FOUND))}catch(_:{});bluetoothAdapter.bondedDevices.forEach{addBluetoothDevice(it,true)}}
+            try{registerReceiver(btReceiver,IntentFilter(BluetoothDevice.ACTION_FOUND))}catch (_: Exception) {};bluetoothAdapter.bondedDevices.forEach{addBluetoothDevice(it,true)}}
         private fun addBluetoothDevice(device:BluetoothDevice,isPaired:Boolean=false){if(!btDevices.contains(device)){btDevices.add(device);ioScope.launch{
             val ck=device.name?:device.address;val cd=deviceCache[ck];val vendor=cd?.vendor?:lookupOnline(device.address.replace(":",""));val cat=cd?.category?:categorizeDevice(device.name?:"",vendor);val compat=cd?.compatibility?:checkCompatibility(device.name?:"",cat)
             deviceCache[ck]=DeviceInfo(device.name?:"Unknown",device.address,vendor,cat,compatibility=compat,isActive=isPaired);saveCache()
@@ -319,9 +319,9 @@ class MainActivity : AppCompatActivity() {
         fun startWifiScan(){if(!wifiManager.isWifiEnabled){Toast.makeText(this@MainActivity,"WiFi disabled",Toast.LENGTH_LONG).show();return}
             Toast.makeText(this@MainActivity,"Scanning WiFi…",Toast.LENGTH_SHORT).show();logEvent("WiFi scan started");updateStatusBar("Scanning WiFi…",0)
             wifiScanResults.clear();wifiDisplayList.clear();wifiAdapter.notifyDataSetChanged();if(!wifiManager.startScan()){Toast.makeText(this@MainActivity,"WiFi scan failed",Toast.LENGTH_SHORT).show();return}
-            try{registerReceiver(wifiReceiver,IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))}catch(_:{})}
+            try{registerReceiver(wifiReceiver,IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))}catch (_: Exception) {}}
         val wifiReceiver=object:BroadcastReceiver(){override fun onReceive(ctx:Context?,intent:Intent?){if(intent?.action==WifiManager.SCAN_RESULTS_AVAILABLE_ACTION){
-            try{unregisterReceiver(this)}catch(_:{});val results=wifiManager.scanResults;wifiScanResults.clear();wifiScanResults.addAll(results);wifiDisplayList.clear()
+            try{unregisterReceiver(this)}catch (_: Exception) {};val results=wifiManager.scanResults;wifiScanResults.clear();wifiScanResults.addAll(results);wifiDisplayList.clear()
             results.forEach{r->val sec=when{r.capabilities.contains("WPA3")->"WPA3";r.capabilities.contains("WPA2")->"WPA2";r.capabilities.contains("WPA")->"WPA";r.capabilities.contains("WEP")->"WEP";else->"Open"}
                 val sig=when{r.level>-50->"Excellent";r.level>-60->"Good";r.level>-70->"Fair";else->"Weak"};wifiDisplayList.add("${r.SSID}\nSignal: ${r.level}dBm ($sig)\nSecurity: $sec | Freq: ${r.frequency}MHz")}
             wifiAdapter.notifyDataSetChanged();updateStatusBar("WiFi: ${results.size} networks",results.size);logEvent("WiFi scan done: ${results.size}")}}}
