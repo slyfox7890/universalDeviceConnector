@@ -1,0 +1,13 @@
+{
+  "name": "UDC Android Dev",
+  "build": { "dockerfile": "Dockerfile" },
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": { "version": "17", "installGradle": true },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": { "extensions": ["vscjava.vscode-gradle","redhat.java","mathiasfrohlich.Kotlin"] }
+  },
+  "postCreateCommand": "bash .devcontainer/setup-android.sh",
+  "remoteUser": "vscode"
+}
